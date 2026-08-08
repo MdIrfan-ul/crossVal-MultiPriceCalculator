@@ -31,6 +31,14 @@ export class AuthService {
         const query = this.userModel.findOne(where);
         return query;
     }
+    async getPublicUserById(userId: string) {
+        const user = await this.userModel.findById(userId);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        return this.toPublicUser(user);
+    }
+
 
     async generateTokens(tokenPayload: TokenPayload): Promise<{ accessToken: string, refreshToken: string }> {
         const accessTime = this.configService.get<number>('ACCESS_TOKEN');

@@ -4,7 +4,9 @@ import { Model, Types } from 'mongoose';
 import { InvoiceDocument } from './schema/document.schema';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
-import { calculateDocumentTotals } from 'src/utils/document-calculations.util';
+import { calculateDocumentTotals, roundCurrency } from 'src/utils/document-calculations.util';
+import { ReportPeriod, SummaryReportQueryDto } from './dto/summary-report-query.dto';
+import { resolveReportDateRange } from 'src/utils/report-period.util';
 
 @Injectable()
 export class DocumentService {
@@ -96,5 +98,54 @@ export class DocumentService {
         }
         await existing.save();
         return existing;
+    }
+
+    async getSummaryReport(query: SummaryReportQueryDto) {
+        const period = query.period ?? ReportPeriod.TODAY;
+
+        let range;
+        try {
+            range = resolveReportDateRange(period, query.from, query.to);
+        } catch (rangeError: any) {
+            throw new BadRequestException('from and to are required for a custom period');
+        }
+
+        if (range.from > range.to) {
+            throw new BadRequestException('"from" date must be before or equal to "to" date')
+        }
+
+        const match: Record<string, any> = {
+            deleted_at: null,
+            issue_date: { $gte: range.from, $lte: range.to },
+        };
+
+        if (query.status) {
+            match.status = query.status;
+        }
+
+        const [result] = await this.documentModel.aggregate([
+            { $match: match },
+            {
+                $group: {
+                    _id: null,
+                    document_count: { $sum: 1 },
+                    sum_grand_total: { $sum: '$grand_total' },
+                    sum_total_tax: { $sum: '$total_tax' },
+                    sum_total_discount: { $sum: '$total_discount' },
+                },
+            },
+        ]);
+
+        const summary = {
+            document_count: result?.document_count ?? 0,
+            sum_grand_total: roundCurrency(result?.sum_grand_total ?? 0),
+            sum_total_tax: roundCurrency(result?.sum_total_tax ?? 0),
+            sum_total_discount: roundCurrency(result?.sum_total_discount ?? 0),
+            period,
+            from: range.from.toISOString().slice(0, 10),
+            to: range.to.toISOString().slice(0, 10),
+        };
+
+        return summary;
     }
 }

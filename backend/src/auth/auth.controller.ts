@@ -1,10 +1,10 @@
 import { Body, Controller, Post, Req, Res, UseGuards, Logger } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { AuthService, TokenPayload } from './auth.service';
 import type { Request, Response } from 'express';
 import { RegisterInput } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
-import { JwtAuthGuard } from './guards';
+import { JwtAuthGuard, JwtRefreshGuard } from './guards';
 
 interface AuthRequest extends Request {
   user: { userId: number; email: string };
@@ -39,6 +39,30 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
     return { accessToken: tokens.accessToken, user: tokens.user };
+  }
+
+  @Post('refresh')
+  @UseGuards(JwtRefreshGuard)
+  async refreshAuth(@Req() req: AuthRequest, @Res({ passthrough: true }) res: Response) {
+    const user = req.user as unknown as TokenPayload;
+
+    const tokens = await this.authService.generateTokens({
+      userId: user.userId,
+      email: user.email,
+    });
+
+    // Rotate the refresh token cookie
+    const ENV = this.configService.get<string>('ENVIRONMENT');
+
+    const publicUser = await this.authService.getPublicUserById(user.userId);
+    res.cookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: ENV === 'PRODUCTION',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return { accessToken: tokens.accessToken, user: publicUser };
   }
 
 
