@@ -13,6 +13,9 @@ export class DocumentService {
     ) { }
 
     async create(createDocumentInput: CreateDocumentDto, userId: string) {
+        if (!createDocumentInput.line_items.length) {
+            throw new BadRequestException('line_items needed to create a document.')
+        }
         const { lines, totals } = calculateDocumentTotals(createDocumentInput.line_items);
 
         // Merge computed per-line amounts back onto each line item so
@@ -53,19 +56,19 @@ export class DocumentService {
         if (existing.status === 'finalized') {
             throw new BadRequestException('Finalized documents cannot be edited')
         }
-        if (updateDocumentInput.title !== undefined) {
+        if (updateDocumentInput?.title !== undefined) {
             existing.title = updateDocumentInput.title;
         }
-        if (updateDocumentInput.customer_name !== undefined) {
+        if (updateDocumentInput?.customer_name !== undefined) {
             existing.customer_name = updateDocumentInput.customer_name;
         }
-        if (updateDocumentInput.issue_date !== undefined) {
+        if (updateDocumentInput?.issue_date !== undefined) {
             existing.issue_date = new Date(updateDocumentInput.issue_date);
         }
-        if (updateDocumentInput.status !== undefined) {
+        if (updateDocumentInput?.status !== undefined) {
             existing.status = updateDocumentInput.status;
         }
-        if (updateDocumentInput.line_items !== undefined) {
+        if (updateDocumentInput?.line_items !== undefined) {
             const { lines, totals } = calculateDocumentTotals(updateDocumentInput.line_items);
             existing.line_items = updateDocumentInput.line_items.map((item, i) => ({
                 ...item,

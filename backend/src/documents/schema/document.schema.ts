@@ -34,8 +34,8 @@ export const LineItemDiscountSchema = SchemaFactory.createForClass(LineItemDisco
 
 @Schema({ _id: false })
 export class LineItem {
-    @Prop({ type: String, required: true, trim: true })
-    description!: string;
+    @Prop({ type: String, required: false, trim: true })
+    description?: string;
 
     @Prop({
         type: Number,
@@ -119,19 +119,17 @@ export const DocumentSchema = SchemaFactory.createForClass(InvoiceDocument);
 
 // Require at least one line item before a document can be finalized.
 // Remove this if drafts with zero items should be finalizable.
-(DocumentSchema as any).pre('validate', function (this: any, next?: (err?: Error) => void) {
+(DocumentSchema as any).pre('validate', function (this: any) {
     if (this.status === 'finalized' && (!this.line_items || this.line_items.length === 0)) {
         this.invalidate('line_items', 'A finalized document must have at least one line item');
     }
-    next?.();
 });
 
 // Exclude soft-deleted docs by default, matching user.schema.ts convention
-function excludeDeleted(this: any, next: () => void) {
+function excludeDeleted(this: any) {
     if (this.getQuery().deleted_at === undefined) {
         this.where({ deleted_at: null });
     }
-    next();
 }
 
 (DocumentSchema as any).pre(['find', 'findOne', 'countDocuments'], excludeDeleted);

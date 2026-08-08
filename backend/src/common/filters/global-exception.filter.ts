@@ -1,5 +1,6 @@
 import {
     ArgumentsHost,
+    BadRequestException,
     Catch,
     ConflictException,
     ExceptionFilter,
@@ -9,6 +10,7 @@ import {
 } from "@nestjs/common"
 import { Response } from "express"
 import { MongoServerError } from "mongodb"
+import { LineItemCalculationError } from "src/utils/document-calculations.util"
 
 function isMongoDuplicateKeyError(error: unknown): error is MongoServerError {
     return (
@@ -44,7 +46,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
         if (error instanceof HttpException) {
             this.logger.warn(`${status} - ${JSON.stringify(body)}`)
-        } else {
+        } else if (error instanceof LineItemCalculationError) {
+            throw new BadRequestException(error.message);
+        }
+        else {
             this.logger.error(
                 "Unhandled error",
                 error instanceof Error ? error.stack : String(error),
