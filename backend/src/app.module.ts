@@ -10,6 +10,7 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { DocumentsModule } from './documents/documents.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { DocumentsModule } from './documents/documents.module';
     DatabaseModule,
     UsersModule,
     AuthModule,
-    DocumentsModule
+    DocumentsModule,
+    ReportsModule
 
   ],
   controllers: [AppController],
