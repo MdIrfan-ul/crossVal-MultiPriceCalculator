@@ -1,11 +1,10 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { RegisterInput } from './dto/register.dto';
 import { User } from 'src/users/schema/user.schema';
 import { LoginDto } from './dto/login.dto';
 import { comparePassword } from 'src/utils/password.util';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import ms from 'ms';
 import { InjectModel } from '@nestjs/mongoose';
 import { QueryFilter, Model } from 'mongoose';
 
@@ -18,7 +17,7 @@ export interface TokenPayload {
 @Injectable()
 export class AuthService {
     constructor(
-        @InjectModel(User.name) private userModel: Model<User>,
+        @InjectModel(User.name) private readonly userModel: Model<User>,
         private readonly configService: ConfigService,
         private readonly jwtService: JwtService
     ) { }
@@ -29,8 +28,8 @@ export class AuthService {
     }
 
     private async checkExistUser(where: QueryFilter<User>): Promise<User | null> {
-        const user = await this.userModel.findOne({ where, raw: true })
-        return user;
+        const query = this.userModel.findOne(where);
+        return query;
     }
 
     async generateTokens(tokenPayload: TokenPayload): Promise<{ accessToken: string, refreshToken: string }> {
@@ -53,7 +52,7 @@ export class AuthService {
 
     private toPublicUser(user: User) {
         return {
-            id: user.id,
+            id: user._id,
             name: user.name,
             email: user.email,
             avatarUrl: user.profile ?? null,
@@ -74,7 +73,7 @@ export class AuthService {
             throw new UnauthorizedException('Invalid email or password.');
         }
 
-        const tokens = await this.generateTokens({ userId: user?.id, email: user?.email });
+        const tokens = await this.generateTokens({ userId: user?._id, email: user?.email });
 
         return {
             ...tokens,

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { Document } from 'mongoose';
 import { hashPassword } from 'src/utils/password.util';
 
@@ -36,22 +36,20 @@ export class User {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 // Equivalent of @BeforeCreate hashPasswordHook
-(UserSchema as any).pre('save', async function (this: UserDocument, next: (err?: Error) => void) {
+(UserSchema as any).pre('save', async function (this: UserDocument) {
     // Only hash if password is new or has been modified
     if (this.isModified('password') && this.password) {
         this.password = await hashPassword(this.password);
     }
-    next();
 });
 
 // Optional: exclude soft-deleted docs by default on find queries
 // (Mongoose has no built-in "paranoid" mode like Sequelize, so this
 // middleware mimics it for common query methods)
-function excludeDeleted(this: any, next: () => void) {
+function excludeDeleted(this: any) {
     if (this.getQuery().deleted_at === undefined) {
         this.where({ deleted_at: null });
     }
-    next();
 }
 
 (UserSchema as any).pre('find', excludeDeleted);
