@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { randomUUID } from 'crypto';
 import { Document } from 'mongoose';
 import { hashPassword } from 'src/utils/password.util';
 
@@ -9,8 +10,8 @@ export type UserDocument = User & Document;
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
 })
 export class User {
-    @Prop({ type: String, required: true, unique: true })
-    id!: string;
+    @Prop({ type: String, default: () => randomUUID() })
+    _id!: string;
 
     @Prop({ type: String, required: true })
     name!: string;
