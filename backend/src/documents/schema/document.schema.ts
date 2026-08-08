@@ -111,6 +111,10 @@ export class InvoiceDocument {
     created_by?: Types.ObjectId;
 
     // Soft-delete field, consistent with user.schema.ts
+
+    @Prop({ type: Text, required: false, trim: true })
+    description?: string;
+
     @Prop({ type: Date, default: null })
     deleted_at?: Date | null;
 }
