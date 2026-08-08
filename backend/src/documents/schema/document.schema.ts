@@ -61,6 +61,12 @@ export class LineItem {
         max: [100, 'Tax percent cannot exceed 100'],
     })
     tax_percent?: number;
+
+    @Prop({ type: Number }) line_subtotal?: number;
+    @Prop({ type: Number }) discount_amount?: number;
+    @Prop({ type: Number }) discounted_amount?: number;
+    @Prop({ type: Number }) tax_amount?: number;
+    @Prop({ type: Number }) line_total?: number;
 }
 
 export const LineItemSchema = SchemaFactory.createForClass(LineItem);
@@ -95,6 +101,11 @@ export class InvoiceDocument {
 
     @Prop({ type: [LineItemSchema], default: [] })
     line_items!: LineItem[];
+
+    @Prop({ type: Number, default: 0 }) subtotal!: number;
+    @Prop({ type: Number, default: 0 }) total_discount!: number;
+    @Prop({ type: Number, default: 0 }) total_tax!: number;
+    @Prop({ type: Number, default: 0 }) grand_total!: number;
 
     @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
     created_by?: Types.ObjectId;
