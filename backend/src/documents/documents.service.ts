@@ -39,6 +39,21 @@ export class DocumentService {
         });
     }
 
+    async getAll(userId: string) {
+        const documents = await this.documentModel.find({ created_by: userId });
+        if (!documents.length) {
+            throw new NotFoundException('no documents found.')
+        }
+        return documents;
+    }
+    async getById(id: string, userId: string) {
+        const document = await this.documentModel.findOne({ _id: id, created_by: userId });
+        if (!document) {
+            throw new NotFoundException('no document found.')
+        }
+        return document;
+    }
+
     async update(id: string, updateDocumentInput: UpdateDocumentDto, userId: string) {
         if (!Types.ObjectId.isValid(id)) {
             throw new BadRequestException('Invalid document id');

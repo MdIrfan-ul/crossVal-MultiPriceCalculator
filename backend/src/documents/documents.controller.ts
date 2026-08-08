@@ -22,6 +22,23 @@ export class DocumentController {
         return this.documentService.create(createDocumentInput, req.user?.userId);
     }
 
+    @Get('/')
+    @UseGuards(JwtAuthGuard)
+    async getAll(
+        @Req() req: AuthRequest,
+    ) {
+        return this.documentService.getAll(req.user?.userId);
+    }
+
+    @Get('/:id')
+    @UseGuards(JwtAuthGuard)
+    async get(
+        @Param('id', ParseObjectIdPipe) id: string,
+        @Req() req: AuthRequest,
+    ) {
+        return this.documentService.getById(id, req.user?.userId);
+    }
+
     @Patch('/:id')
     @UseGuards(JwtAuthGuard)
     async update(
