@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { AuthField } from "./AuthField";
 import { AlertBanner } from "./AlertBanner";
 import { isValidEmail, type FieldErrors } from "@/lib/validation";
 
 export function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,20 +38,20 @@ export function LoginForm() {
 
     setIsSubmitting(true);
     try {
-      // Wire this up to your real auth endpoint, e.g.:
-      // const res = await fetch("/api/auth/login", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ email, password }),
-      // });
-      // const data = await res.json();
-      // if (data.status !== 200) {
-      //   setServerError(data.errorMessage || "Sign in failed");
-      //   return;
-      // }
-      // redirect on success...
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
 
-      await new Promise((resolve) => setTimeout(resolve, 800)); // placeholder
+      if (!res.ok) {
+        setServerError(data.errorMessage || "Sign in failed");
+        return;
+      }
+
+      router.push("/dashboard");
+      return;
     } catch {
       setServerError("Something went wrong. Please try again.");
     } finally {

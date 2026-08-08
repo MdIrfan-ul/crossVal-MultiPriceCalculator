@@ -5,8 +5,10 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react
 import { AuthField } from "./AuthField";
 import { AlertBanner } from "./AlertBanner";
 import { isValidEmail, isValidPassword, type FieldErrors } from "@/lib/validation";
+import { useRouter } from "next/router";
 
 export function CreateAccountForm() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,16 +49,17 @@ export function CreateAccountForm() {
     setIsSubmitting(true);
     try {
       // Wire this up to your real registration endpoint, e.g.:
-      // const res = await fetch("/api/auth/register", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ name, email, password }),
-      // });
-      // const data = await res.json();
-      // if (data.status !== 200) {
-      //   setServerError(data.errorMessage || "Could not create account");
-      //   return;
-      // }
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (data.statusCode !== 200 || data.statusCode !== 201) {
+        setServerError(data.message || "Could not create account");
+        return;
+      }
+      router.push("/dashboard");
       // redirect on success...
 
       await new Promise((resolve) => setTimeout(resolve, 800)); // placeholder
